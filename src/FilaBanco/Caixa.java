@@ -11,5 +11,9 @@ package FilaBanco;
  * @author Stein
  */
 public class Caixa {
-    
+    private int numeroAtendido;
+        public Caixa(){
+            numeroAtendido = 0;
+        }
+        
 }
