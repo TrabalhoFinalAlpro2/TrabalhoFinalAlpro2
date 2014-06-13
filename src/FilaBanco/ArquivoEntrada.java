@@ -2,54 +2,50 @@
 
 package FilaBanco;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Scanner;
-
-/**
- *
- * @author Stein
- */
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Properties;
+ 
 public class ArquivoEntrada {
-    private double tempoAtendimento;
-    private double tempoEspera;
-    private double probabilidadeDeChegada;
-    
-    public ArquivoEntrada(){
-        tempoAtendimento = 10.0;
-        tempoEspera = 10.0;
-        probabilidadeDeChegada = 0.1;
-    }
-    
-    public boolean leArquivo() {
-        
-        Path p = Paths.get("arquivo.txt");        
-        
-        try ( Scanner s = new Scanner (Files.newBufferedReader(p,Charset.defaultCharset())) ) {
-            s.useDelimiter(",");
-            while(s.hasNextDouble()) {
-                tempoAtendimento = s.nextDouble();
-                tempoEspera = s.nextDouble();  
-                probabilidadeDeChegada = s.nextDouble();
+ 
+    private static Properties properties;
+ 
+    static{
+ 
+        try {
+ 
+            FileInputStream fis = null;
+            File file = new File("Arquivo.properties");
+ 
+            if(file.exists()){
+                properties = new Properties();
+                fis = new FileInputStream(file);
+                properties.load(fis);
+                fis.close();
             }
-            
-        } catch(IOException e) {
-            return false; // se deu problema retorna false
-        }         
-        return true;
+ 
+        }catch(Exception x){
+            x.printStackTrace();
+        }
     }
-    
-    public double getTempoAtendimento(){
-        return tempoAtendimento;
+ 
+    public static String lerProperties(String atributo){
+ 
+        String retorno = null;
+ 
+        try {
+ 
+            FileInputStream fis = null;
+            File file = new File("Arquivo.properties");
+ 
+            if(properties != null){
+                retorno = properties.getProperty(atributo);
+            }
+ 
+        }catch(Exception x){
+            x.printStackTrace();
+        }
+ 
+        return retorno;
     }
-    public double getTempoEspera(){
-        return tempoEspera;
-    }
-    public double getProbabilidadeDeChegada(){
-        return probabilidadeDeChegada;
-    }    
-    
 }
