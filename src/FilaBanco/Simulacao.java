@@ -30,6 +30,7 @@ public class Simulacao
         fila = new QueueLinked<Cliente>();
         filaPrioritaria = new QueueLinked<Cliente>();
         caixa1 = new Caixa();
+        
         caixa2 = new Caixa();
         caixaPrioritaria = new Caixa();
         geradorClientes = new GeradorClientes(probabilidadeChegada);
