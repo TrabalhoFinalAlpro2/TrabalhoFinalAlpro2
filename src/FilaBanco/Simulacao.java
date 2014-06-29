@@ -52,10 +52,10 @@ public class Simulacao
                 //se cliente chegou, criar um cliente e inserir na fila do caixa
                 Cliente c = new Cliente(geradorClientes.getQuantidadeGerada(),tempo);
                     if(geradorIdade.nextDouble()*90 > 60.0){
-                        filaPrioritaria.add(c);
+                        filaPrioritaria.enqueue(c);
                     }
                     else{
-                    fila.add(c);
+                    fila.enqueue(c);
                     }
                 if(trace)
                     System.out.println(tempo + ": cliente " + c.getNumero() + " ("+c.getTempoAtendimento()+" min) entra na fila - " + fila.size() + " pessoa(s)");
@@ -68,7 +68,7 @@ public class Simulacao
                 {
                     //tirar o cliente do inicio da fila e atender no caixa
                     
-                    caixa1.atenderNovoCliente(fila.remove());
+                    caixa1.atenderNovoCliente(fila.dequeue());
                     statTemposEsperaFila.adicionar(tempo - caixa1.getClienteAtual().getInstanteChegada());
                     
                                                            
@@ -77,7 +77,7 @@ public class Simulacao
                 }
                 else{
                     if(!filaPrioritaria.isEmpty()){
-                    caixa1.atenderNovoCliente(filaPrioritaria.remove());
+                    caixa1.atenderNovoCliente(filaPrioritaria.dequeue());
                     statTemposEsperaFilaPrioritaria.adicionar(tempo - caixa1.getClienteAtual().getInstanteChegada()); 
                     
                       if(trace)
@@ -111,7 +111,7 @@ public class Simulacao
                 {
                     //tirar o cliente do inicio da fila e atender no caixa
                    
-                    caixa2.atenderNovoCliente(fila.remove());
+                    caixa2.atenderNovoCliente(fila.dequeue());
                     statTemposEsperaFila.adicionar(tempo - caixa2.getClienteAtual().getInstanteChegada());
                               
                     if(trace)
@@ -119,7 +119,7 @@ public class Simulacao
                 }
                 else{
                     if(!filaPrioritaria.isEmpty()){
-                    caixa2.atenderNovoCliente(filaPrioritaria.remove());
+                    caixa2.atenderNovoCliente(filaPrioritaria.dequeue());
                     statTemposEsperaFilaPrioritaria.adicionar(tempo - caixa2.getClienteAtual().getInstanteChegada());
                     
                       if(trace)
@@ -152,7 +152,7 @@ public class Simulacao
                 {
                     //tirar o cliente do inicio da fila e atender no caixa
                     
-                    caixaPrioritaria.atenderNovoCliente(filaPrioritaria.remove());
+                    caixaPrioritaria.atenderNovoCliente(filaPrioritaria.dequeue());
                     statTemposEsperaFilaPrioritaria.adicionar(tempo - caixaPrioritaria.getClienteAtual().getInstanteChegada()); 
                                   
                     if(trace)
@@ -160,7 +160,7 @@ public class Simulacao
                 }
                 else{
                     if(!fila.isEmpty()){
-                        caixaPrioritaria.atenderNovoCliente(fila.remove());
+                        caixaPrioritaria.atenderNovoCliente(fila.dequeue());
                     statTemposEsperaFila.adicionar(tempo - caixaPrioritaria.getClienteAtual().getInstanteChegada());
                     }
                 }
