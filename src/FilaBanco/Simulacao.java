@@ -17,18 +17,21 @@ public class Simulacao
 {
     private static final int duracao = 200;
     private static final double probabilidadeChegada = 0.6;
-    private QueueTAD<Cliente> fila, filaPrioritaria;
-    private Caixa caixa1, caixa2, caixaPrioritaria;
+    private QueueTAD<Cliente> filaCaixa, filaPrioritaria;
+    private StackTAD<Cliente> filaGerente;
+    private Caixa caixa1, caixa2, caixaPrioritaria; 
     private Gerente gerente1;
     private GeradorClientes geradorClientes;
-    private Acumulador statTemposEsperaFila, statTemposEsperaFilaPrioritaria;
-    private Acumulador statComprimentosFila, statComprimentosFilaPrioritaria;
+    private Acumulador statTemposEsperaFila, statTemposEsperaFilaGerente, statTemposEsperaFilaPrioritaria;
+    private Acumulador statComprimentosFila, statComprimentosFilaGerente, statComprimentosFilaPrioritaria;
     private boolean trace; //valor indica se a simulacao ira imprimir passo-a-passo os resultados
     private static final Random geradorIdade = new Random();
+    private static final Random definidorLocal = new Random();
     
     public Simulacao(boolean t)
     {
-        fila = new QueueLinked<Cliente>();
+        filaCaixa = new QueueLinked<Cliente>();
+        filaGerente = new StackArray<Cliente>();
         filaPrioritaria = new QueueLinked<Cliente>();
         caixa1 = new Caixa();
         
@@ -38,8 +41,10 @@ public class Simulacao
         geradorClientes = new GeradorClientes(probabilidadeChegada);
         statTemposEsperaFila = new Acumulador();
         statComprimentosFila = new Acumulador();
+        statTemposEsperaFilaGerente = new Acumulador();
         statTemposEsperaFilaPrioritaria = new Acumulador();
         statComprimentosFilaPrioritaria = new Acumulador();
+        statComprimentosFilaGerente = new Acumulador();
         trace = t;
     }
     
@@ -53,24 +58,29 @@ public class Simulacao
             {
                 //se cliente chegou, criar um cliente e inserir na fila do caixa
                 Cliente c = new Cliente(geradorClientes.getQuantidadeGerada(),tempo);
-                    if(geradorIdade.nextDouble()*90 > 60.0){
+                    if(definidorLocal.nextBoolean()==true){
+                        if(geradorIdade.nextDouble()*90 > 60.0){
                         filaPrioritaria.enqueue(c);
+                        }
+                        else{
+                        filaCaixa.enqueue(c);
+                        }
+                        if(trace)
+                        System.out.println(tempo + ": cliente " + c.getNumero() + " ("+c.getTempoAtendimento()+" min) entra na fila - " + filaCaixa.size() + " pessoa(s)");
                     }
                     else{
-                    fila.enqueue(c);
-                    }
-                if(trace)
-                    System.out.println(tempo + ": cliente " + c.getNumero() + " ("+c.getTempoAtendimento()+" min) entra na fila - " + fila.size() + " pessoa(s)");
+                        filaGerente.push(c);
+                    }    
             }
             //verificar se o caixa esta vazio
             if(caixa1.estaVazio())
             {
                 //se o caixa esta vazio, atender o primeiro cliente da fila se ele existir
-                if(!fila.isEmpty() && (filaPrioritaria.size()<=5))
+                if(!filaCaixa.isEmpty() && (filaPrioritaria.size()<=5))
                 {
                     //tirar o cliente do inicio da fila e atender no caixa
                     
-                    caixa1.atenderNovoCliente(fila.dequeue());
+                    caixa1.atenderNovoCliente(filaCaixa.dequeue());
                     statTemposEsperaFila.adicionar(tempo - caixa1.getClienteAtual().getInstanteChegada());
                     
                                                            
@@ -103,48 +113,40 @@ public class Simulacao
                     caixa1.getClienteAtual().decrementarTempoAtendimento();
                 }
             }
-            statComprimentosFila.adicionar(fila.size());
+            statComprimentosFila.adicionar(filaCaixa.size());
             
                        
-            if(caixa2.estaVazio())
+            if(gerente1.estaVazio())
             {
                 //se o caixa esta vazio, atender o primeiro cliente da fila se ele existir
-                if(!fila.isEmpty() && (filaPrioritaria.size()<=10))
+                if(!filaGerente.isEmpty())
                 {
                     //tirar o cliente do inicio da fila e atender no caixa
                    
-                    caixa2.atenderNovoCliente(fila.dequeue());
-                    statTemposEsperaFila.adicionar(tempo - caixa2.getClienteAtual().getInstanteChegada());
+                    gerente1.atenderNovoCliente(filaGerente.pop());
+                    statTemposEsperaFilaGerente.adicionar(tempo - gerente1.getClienteAtual().getInstanteChegada());
                               
                     if(trace)
-                        System.out.println(tempo + ": cliente " + caixa2.getClienteAtual().getNumero() + " chega ao caixa.");
-                }
-                else{
-                    if(!filaPrioritaria.isEmpty()){
-                    caixa2.atenderNovoCliente(filaPrioritaria.dequeue());
-                    statTemposEsperaFilaPrioritaria.adicionar(tempo - caixa2.getClienteAtual().getInstanteChegada());
-                    
-                      if(trace)
-                        System.out.println(tempo + ": cliente " + caixa2.getClienteAtual().getNumero() + " chega ao caixa.");
-                    }
+                        System.out.println(tempo + ": cliente " + gerente1.getClienteAtual().getNumero() + " chega ao caixa.");
+               
                 }
                 
             }
             else
             {
                 //se o caixa ja esta ocupado, diminuir de um em um o tempo de atendimento ate chegar a zero
-                if(caixa2.getClienteAtual().getTempoAtendimento() == 0)
+                if(gerente1.getClienteAtual().getTempoAtendimento() == 0)
                 {
                     if(trace)
-                        System.out.println(tempo + ": cliente " + caixa2.getClienteAtual().getNumero() + " deixa o caixa.");
-                    caixa2.dispensarClienteAtual();
+                        System.out.println(tempo + ": cliente " + gerente1.getClienteAtual().getNumero() + " deixa o caixa.");
+                    gerente1.dispensarClienteAtual();
                 }
                 else
                 {
-                    caixa2.getClienteAtual().decrementarTempoAtendimento();
+                    gerente1.getClienteAtual().decrementarTempoAtendimento();
                 }
             }
-            statComprimentosFila.adicionar(fila.size());
+            statComprimentosFilaGerente.adicionar(filaGerente.size());
             
                                    
             if(caixaPrioritaria.estaVazio())
@@ -161,8 +163,8 @@ public class Simulacao
                         System.out.println(tempo + ": cliente " + caixaPrioritaria.getClienteAtual().getNumero() + " chega ao caixa.");
                 }
                 else{
-                    if(!fila.isEmpty()){
-                        caixaPrioritaria.atenderNovoCliente(fila.dequeue());
+                    if(!filaCaixa.isEmpty()){
+                        caixaPrioritaria.atenderNovoCliente(filaCaixa.dequeue());
                     statTemposEsperaFila.adicionar(tempo - caixaPrioritaria.getClienteAtual().getInstanteChegada());
                     }
                 }
@@ -187,16 +189,19 @@ public class Simulacao
     
     public void limpar()
     {
-        fila = new QueueLinked<Cliente>();
+        filaCaixa = new QueueLinked<Cliente>();
         filaPrioritaria = new QueueLinked<Cliente>();
+        filaGerente = new StackArray<Cliente>();
         caixa1 = new Caixa();
-        caixa2 = new Caixa();
+        gerente1 = new Gerente();
         caixaPrioritaria = new Caixa();
         geradorClientes = new GeradorClientes(probabilidadeChegada);
         statTemposEsperaFila = new Acumulador();
         statComprimentosFila = new Acumulador();
+        statComprimentosFilaGerente = new Acumulador();
         statTemposEsperaFilaPrioritaria = new Acumulador();
         statComprimentosFilaPrioritaria = new Acumulador();
+        statComprimentosFilaGerente = new Acumulador();
     }
     
     public void imprimirResultados()
@@ -208,18 +213,21 @@ public class Simulacao
         System.out.println("Tempo de atendimento minimo:" + Cliente.tempoMinAtendimento);
         System.out.println("Tempo de atendimento maximo:" + Cliente.tempoMaxAtendimento);
         System.out.println("Cliente atendidos no caixa 1:" + caixa1.getNumeroAtendidos());
-        System.out.println("Cliente atendidos no caixa 2:" + caixa2.getNumeroAtendidos());
+        System.out.println("Cliente atendidos no gerente:" + gerente1.getNumeroAtendidos());
         System.out.println("Cliente atendidos no Caixa Prioritaria:" + caixaPrioritaria.getNumeroAtendidos());
-        System.out.println("Clientes ainda na fila:" + fila.size());
+        System.out.println("Clientes ainda na fila:" + filaCaixa.size());
         System.out.println("Clientes ainda na fila Prioritaria:" + filaPrioritaria.size());
+        System.out.println("Clientes ainda na fila Gerente:" + filaGerente.size());
         System.out.println("Cliente ainda no caixa 1:" + (caixa1.getClienteAtual() != null));
-        System.out.println("Cliente ainda no caixa 2:" + (caixa2.getClienteAtual() != null));
+        System.out.println("Cliente ainda no Gerente:" + (gerente1.getClienteAtual() != null));
         System.out.println("Cliente ainda no caixa Prioritario:" + (caixaPrioritaria.getClienteAtual() != null));
         System.out.println("Total de clientes gerados:" + geradorClientes.getQuantidadeGerada());
-        System.out.println("Tempo medio de espera:" + statTemposEsperaFila.getMedia());
-        System.out.println("Comprimento medio da fila:" + statComprimentosFila.getMedia());
+        System.out.println("Tempo medio de espera na fila do Caixa:" + statTemposEsperaFila.getMedia());
+        System.out.println("Comprimento medio da fila do Caixa:" + statComprimentosFila.getMedia());
         System.out.println("Tempo medio de espera Prioritaria:" + statTemposEsperaFilaPrioritaria.getMedia());
         System.out.println("Comprimento medio da fila Prioritaria:" + statComprimentosFilaPrioritaria.getMedia());
+        System.out.println("Tempo medio de espera na fila do Gerente:" + statTemposEsperaFilaGerente.getMedia());
+        System.out.println("Comprimento medio da fila de Gerente:" + statComprimentosFilaGerente.getMedia());
     }
 }
 
