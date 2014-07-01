@@ -16,9 +16,10 @@ import java.util.Random;
 public class Simulacao
 {
     private static final int duracao = 200;
-    private static final double probabilidadeChegada = 0.2;
+    private static final double probabilidadeChegada = 0.6;
     private QueueTAD<Cliente> fila, filaPrioritaria;
     private Caixa caixa1, caixa2, caixaPrioritaria;
+    private Gerente gerente1;
     private GeradorClientes geradorClientes;
     private Acumulador statTemposEsperaFila, statTemposEsperaFilaPrioritaria;
     private Acumulador statComprimentosFila, statComprimentosFilaPrioritaria;
@@ -33,6 +34,7 @@ public class Simulacao
         
         caixa2 = new Caixa();
         caixaPrioritaria = new Caixa();
+        gerente1 = new Gerente();
         geradorClientes = new GeradorClientes(probabilidadeChegada);
         statTemposEsperaFila = new Acumulador();
         statComprimentosFila = new Acumulador();
