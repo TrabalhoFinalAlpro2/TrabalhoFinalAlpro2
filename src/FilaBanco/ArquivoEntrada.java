@@ -2,50 +2,60 @@
 
 package FilaBanco;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.Properties;
- 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Random;
+import java.util.Scanner;
+
+
 public class ArquivoEntrada {
- 
-    private static Properties properties;
- 
-    static{
- 
-        try {
- 
-            FileInputStream fis = null;
-            File file = new File("Arquivo.properties");
- 
-            if(file.exists()){
-                properties = new Properties();
-                fis = new FileInputStream(file);
-                properties.load(fis);
-                fis.close();
-            }
- 
-        }catch(Exception x){
-            x.printStackTrace();
-        }
+    private int array[];
+    String textoEntrada;
+    
+    public ArquivoEntrada() {
+        textoEntrada = ("");
     }
- 
-    public static String lerProperties(String atributo){
- 
-        String retorno = null;
- 
-        try {
- 
-            FileInputStream fis = null;
-            File file = new File("Arquivo.properties");
- 
-            if(properties != null){
-                retorno = properties.getProperty(atributo);
+    
+     
+    public Boolean leArquivo(String textoEntrada) {
+        // Primeiro cria o Path
+        Path p = Paths.get(textoEntrada);
+        
+        // Depois "abre o stream" para o arquivo
+        // e usa um Scanner para facilitar a 
+        // leitura do arquivo. Usar try-com-recursos.
+        try ( Scanner s = new Scanner (Files.newBufferedReader(p,Charset.defaultCharset())) ) {
+            s.useDelimiter(",");
+            int i=0;
+            while(s.hasNext()) {
+                String str = s.next();
+                int num = Integer.parseInt(str);
+                array[i] = num;
+                i++;
             }
- 
-        }catch(Exception x){
-            x.printStackTrace();
-        }
- 
-        return retorno;
+            
+        } catch(IOException e) {
+            return false; // se deu problema retorna false
+        }         
+        return true;
     }
+    
+
+    @Override
+    public String toString() {
+        String s = "";
+        
+        for (int i=0; i<array.length-1; i++) {
+            s += array[i] + ", ";
+        }
+        s += array[array.length-1];
+        
+        return s;         
+    }
+    
+    
 }
